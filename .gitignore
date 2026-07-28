@@ -1,11 +1,6 @@
 # Composerライブラリの実体(composer install で誰でも再現できるため除外)
 /app/vendor/
 
-# 管理者アカウント作成用の使い捨てスクリプト
-# (実行時に実際のユーザー名・パスワードを書き込む可能性があるため、安全側に倒して除外)
-# テンプレートとしてリポジトリに残したい場合は git add -f tools/create_admin_user.php で個別に追加する
-/tools/create_admin_user.php
-
 # OS/エディタが自動生成する不要ファイル
 .DS_Store
 Thumbs.db
