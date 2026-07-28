@@ -18,28 +18,31 @@ psql -U <user> -d <database> -f run_all.sql
 | 002_create_customers.sql | customers | 顧客マスタ（最低限の項目のみ） |
 | 003_create_quotes.sql | quotes | 見積書本体 |
 | 004_create_quote_items.sql | quote_items | 見積明細行 |
-| 005_alter_customers_add_updated_at_and_memo.sql | customers | updated_at / internal_memo 追加 |
+| 005_alter_customers_add_updated_at.sql | customers | updated_at / internal_memo 追加 |
+| 006_create_customer_memos_FUTURE.sql | customer_memos | （未適用・将来の拡張候補）顧客とのやり取り履歴 |
 | 007_alter_quotes_add_status.sql | quotes | status（ステータス管理）追加 |
-| 008_alter_quotes_add_delivery_and_payment_fields.sql | quotes | 受渡期日・受渡場所・支払条件・責任者 追加 |
+| 008_alter_quotes_add_delivery_and_payment_fields.sql | quotes | 受渡期日・受渡場所・支払条件 追加 |
 | 009_alter_quote_items_add_group_label.sql | quote_items | 明細の大項目グループ(group_label) 追加 |
 | 010_alter_users_add_role.sql | users | 権限(role) 追加 |
 
+`run_all.sql` は上記のうち、適用済みのもの（006 FUTURE を除く）のみを実行する。
+
 ## 運用ルール（列追加・仕様変更時）
 
-作成済みのファイル（001〜004）は基本的に直接編集しない。
+作成済みのSQLファイルは基本的に直接編集しない。
 列追加や仕様変更が発生した場合は、実行順がわかるように連番のALTER文ファイルを追加していく。
 
 例：
 ```
-005_alter_quotes_add_xxx.sql
-006_alter_customers_add_xxx.sql
+011_alter_quotes_add_xxx.sql
+012_alter_customers_add_xxx.sql
 ```
 
 `run_all.sql` にも追加した分の `\i` 行を追記すること。
 
 ## 備考
 
-- 自社情報（company_settings相当）はDBに持たず、アプリ側の `config.php` に直書きする方針のためテーブルなし。
+- 自社情報（company相当）はDBに持たず、アプリ側の `config/company.php` に直書きする方針のためテーブルなし。
 - `quotes.customer_name` / `customer_address` は `customers` テーブルからのスナップショット。
   顧客マスタが後から編集・削除されても、発行済み見積書の表示内容が変わらないようにするため。
 - `customers.internal_memo`（値引き経緯や顧客とのやり取りなど社内向けメモ）は現状 TEXT 1本で簡易運用。
@@ -58,8 +61,8 @@ psql -U <user> -d <database> -f run_all.sql
 - `quotes.delivery_date`（受渡期日）/ `delivery_place`（受渡場所）/ `payment_terms`（支払条件）を追加。
   実際の見積書フォーマットを参考に、他社でも使えるよう汎用項目として用意
   （全てNULL許容、未使用の会社は空のままでよい）。
-  「責任者」「担当者」欄は、印刷後に押印/サインするための空欄と判断したためDB化せず、
-  PDF出力側のテンプレートで空枠を描画するだけで対応する。
+  「責任者」「担当者」欄は、印刷後に押印/サインするための空欄と判断したためDB化していない。
+  PDF出力側のテンプレート（`app/templates/pdf_quote.php`）で空枠を描画する形で対応している。
 - `quote_items.group_label` を追加。明細を大項目でグルーピングする実際の運用（見積書サンプルの `[A]` 表記）
   に対応するための列。同じ値が連続していれば同一グループとして扱う想定（PDF/画面側の表示ロジックで対応）。
 - `users.role` を追加。値は文字列（例: `member`, `admin`）で、数値そのものはDBに持たせない。
